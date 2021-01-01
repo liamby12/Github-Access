@@ -11,7 +11,7 @@ def print_json(user_data):
     print()
 
 
-#prints a user object nicely
+#prints a PyGithub user object nicely
 def print_details(user):
     print()
     print("-"*100)
@@ -41,7 +41,6 @@ def print_details(user):
     print("site_admin: ", user.site_admin)
     print("starred_url: ", user.starred_url)
     print("subscriptions_url: ", user.subscriptions_url)
-    print("twitter_username: ", user.twitter_username)
     print("type: ", user.type)
     print("updated_at: ", user.updated_at)
     print("url: ", user.url)
@@ -51,10 +50,11 @@ def print_details(user):
     print()
 
 
-#prints a repo object nicely
+#prints a PyGithub repo object nicely
 def print_repo(repo):
     print()
     print("-"*100)
+
     print("Full name:", repo.full_name)
     print("Description:", repo.description)
     print("Date created:", repo.created_at)
@@ -64,14 +64,27 @@ def print_repo(repo):
     print("Number of forks:", repo.forks)
     print("Number of stars:", repo.stargazers_count)
     print()
+
+    commit_list = repo.get_commits()
+    print("commit list")
+    pprint(commit_list)
+    clones_traffic = repo.get_clones_traffic(per="week")
+    print("clones traffic")
+    pprint(clones_traffic)
+    views_traffic = repo.get_views_traffic(per="week")
+    print("views traffic")
+    pprint(views_traffic)
+    print()
+
     print("Contents:")
     for content in repo.get_contents(""):
         print(content)
+
     print("-"*100)
     print()
 
 
-#prints a user object nicely
+#prints a PyGithub user and repo object nicely
 def print_user(user):
     #print user profile data
     print_details(user)
@@ -80,23 +93,30 @@ def print_user(user):
         print_repo(repo)
 
 
-#using an access token
-g = Github("Your Auth Token")
+#Specify github account
+accessToken = 'accessToken'
+#username = "username"
+#password = "password"
 
-#specify github account
-username = "liamby12"
+#Create github object using username and password or
+#Create github object using AccessToken
+#g = Github(username, password)
+g = Github(accessToken)
 
-#get and print user data using json
-url = f"https://api.github.com/users/{username}"
-user_data = requests.get(url).json()
-print_json(user_data)
+#Get and print user data using json
+#url = f"https://api.github.com/users/{username}"
+#user_data = requests.get(url).json()
+#print_json(user_data)
 
 #Get and print user data using PyGithub
-g = Github()
-user = g.get_user(username)
+user = g.get_user()
 print_user(user)
 
+#Get commit list / clones and views traffic breakdown for the last week
 #for repo in user.get_repos():
-#    contents = repo.get_clones_traffic()
-#    contents = repo.get_clones_traffic(per="week")
-#    pprint(contents)
+#    commit_list = repo.get_commits()
+#    pprint(commit_list)
+#    clones_traffic = repo.get_clones_traffic(per="week")
+#    pprint(clones_traffic)
+#    views_traffic = repo.get_views_traffic(per="week")
+#    pprint(views_traffic)
