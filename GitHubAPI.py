@@ -1,17 +1,31 @@
+'''
+This file retrieves information from the github V3 API and provides a graphical
+representation in a localhost adress.
+This program returns a link to that localhost adress usually http://127.0.0.1:56968/
+The graphical representation is of the repositories in the logged in users account.
+To log in you must replace the accessToken variable with a valid access token.
+'''
+
+####################################### Imports ######################################
+
 import base64
-from github import Github
-from pprint import pprint
 import requests
+import plotly.graph_objects as go #https://plotly.com/python/
+from github import Github   #https://pygithub.readthedocs.io/en/latest/introduction.html
+from pprint import pprint
 
+####################################### Functions ######################################
 
-#prints json nicely
-def print_json(user_data):
+#Prints json nicely
+def print_json(username):
+    url = f"https://api.github.com/users/{username}"
+    user_data = requests.get(url).json()
     print('USER DATA')
     pprint(user_data)
     print()
 
 
-#prints a PyGithub user object nicely
+#Prints a PyGithub user object nicely
 def print_details(user):
     print()
     print("-"*100)
@@ -50,7 +64,7 @@ def print_details(user):
     print()
 
 
-#prints a PyGithub repo object nicely
+#Prints a PyGithub repo object nicely
 def print_repo(repo):
     print()
     print("-"*100)
@@ -84,7 +98,7 @@ def print_repo(repo):
     print()
 
 
-#prints a PyGithub user and repo object nicely
+#Prints a PyGithub user and repo object nicely
 def print_user(user):
     #print user profile data
     print_details(user)
@@ -93,30 +107,85 @@ def print_user(user):
         print_repo(repo)
 
 
+####################################### Main ######################################
+
 #Specify github account
-accessToken = 'accessToken'
-#username = "username"
-#password = "password"
+accessToken = 'ff5d7adba0589f0bcecbcaaa5ab78cd59f3d971c'
 
-#Create github object using username and password or
 #Create github object using AccessToken
-#g = Github(username, password)
 g = Github(accessToken)
-
-#Get and print user data using json
-#url = f"https://api.github.com/users/{username}"
-#user_data = requests.get(url).json()
-#print_json(user_data)
 
 #Get and print user data using PyGithub
 user = g.get_user()
-print_user(user)
+#print_user(user)
 
-#Get commit list / clones and views traffic breakdown for the last week
-#for repo in user.get_repos():
-#    commit_list = repo.get_commits()
-#    pprint(commit_list)
-#    clones_traffic = repo.get_clones_traffic(per="week")
-#    pprint(clones_traffic)
-#    views_traffic = repo.get_views_traffic(per="week")
-#    pprint(views_traffic)
+#Get and print user data using json
+#print_json(user.login)
+
+#Create graph object
+fig = go.Figure()
+
+#Create array of sizes of repo
+views = list()
+clones = list()
+for repo in user.get_repos():
+    views_traffic = repo.get_views_traffic()
+    views.append(views_traffic.get("count"))
+    clones_traffic = repo.get_clones_traffic()
+    clones.append(clones_traffic.get("count"))
+
+    print(views_traffic.get("count"))
+    print(clones_traffic.get("count"))
+    print(2.* 21/(40.**2))
+    print()
+
+
+
+#Add repository bubbles to
+for repo in user.get_repos():
+
+    #Get commit list / clones and views traffic breakdown for the last week
+    commit_list = repo.get_commits()
+    clones_traffic = repo.get_clones_traffic()
+    views_traffic = repo.get_views_traffic()
+    size = 10
+    if views_traffic.get("count") > 10:
+        size = views_traffic.get("count")
+
+    #print values
+    print(repo.name)
+    print(views_traffic.get("count"))
+    print(clones_traffic.get("count"))
+    print(size)
+    print()
+
+    #Add create and add bubble trace for each repo
+    fig.add_trace(go.Scatter(
+        x= [views_traffic.get("count")],
+        y= [clones_traffic.get("count")],
+        name= repo.name,
+        text= ['A<br>placeholder'],
+        mode= 'markers',
+        marker=dict(
+            size=size,
+            opacity=[0.5])
+        )
+    )
+
+#Update the layout of the graph
+fig.update_layout(
+    title='Clones Traffic v. Count of Views Traffic',
+    xaxis=dict(
+        title='Count of Views Traffic',
+        gridcolor='white',
+    ),
+    yaxis=dict(
+        title='Count of Clones Traffic',
+        gridcolor='white',
+    ),
+    paper_bgcolor='rgb(243, 243, 243)',
+    plot_bgcolor='rgb(243, 243, 243)',
+)
+
+#Publish Graph
+fig.show()
