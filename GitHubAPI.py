@@ -110,14 +110,14 @@ def print_user(user):
 ####################################### Main ######################################
 
 #Specify github account
-accessToken = 'ff5d7adba0589f0bcecbcaaa5ab78cd59f3d971c'
+accessToken = 'Your Access Token'
 
 #Create github object using AccessToken
 g = Github(accessToken)
 
 #Get and print user data using PyGithub
 user = g.get_user()
-#print_user(user)
+print_user(user)
 
 #Get and print user data using json
 #print_json(user.login)
@@ -125,62 +125,96 @@ user = g.get_user()
 #Create graph object
 fig = go.Figure()
 
-#Create array of sizes of repo
+#Create array of sizes of each repo
 views = list()
-clones = list()
 for repo in user.get_repos():
     views_traffic = repo.get_views_traffic()
     views.append(views_traffic.get("count"))
-    clones_traffic = repo.get_clones_traffic()
-    clones.append(clones_traffic.get("count"))
 
-    print(views_traffic.get("count"))
-    print(clones_traffic.get("count"))
-    print(2.* 21/(40.**2))
-    print()
+#Scaler for size of each bubble
+sizeref = 2.*max(views)/(40.**2)
 
-
-
-#Add repository bubbles to
+#Add repository bubbles to graph
 for repo in user.get_repos():
 
     #Get commit list / clones and views traffic breakdown for the last week
     commit_list = repo.get_commits()
     clones_traffic = repo.get_clones_traffic()
+    clones = clones_traffic.get("count")
+    unique_clones = clones_traffic.get("uniques")
+    views = views_traffic.get("count")
+    unique_views = views_traffic.get("uniques")
     views_traffic = repo.get_views_traffic()
-    size = 10
-    if views_traffic.get("count") > 10:
-        size = views_traffic.get("count")
+
+    stargazers = repo.stargazers_count
+
+    #Calculate popularity score
+    popularity_score = 0
+    if stargazers > 0:
+        popularity_score += 1
+    if stargazers > 10:
+        popularity_score += 1
+    if stargazers > 100:
+        popularity_score += 1
+    if stargazers > 1000:
+        popularity_score += 1
+    if views >= 10:
+        popularity_score += 1
+    if views >= 100:
+        popularity_score += 1
+    if views >= 1000:
+        popularity_score += 1
+    if unique_views < (views/2):
+        popularity_score -= .5
+    if clones >= 2:
+        popularity_score += .5
+    if clones >= 10:
+        popularity_score += 1
+    if clones >= 100:
+        popularity_score += 1
+    if popularity_score >= 10:
+        popularity_score = 10
+    if popularity_score <= 0:
+        popularity_score = 0
+
+    #Create strings to display info on repositories
+    clones_text = 'Clones = ' + str(clones) + '<br>'
+    unique_clones_text = 'Unique Clones = ' + str(unique_clones) + '<br>'
+    views_text = 'Views = ' + str(views) + '<br>'
+    unique_views_text = 'Unique Views = ' + str(unique_views) + '<br>'
+    stargazers_text = 'Stargazers = ' + str(stargazers) + '<br>'
+    divider_string = '-'*10 + '<br>'
+    popularity_score_text = 'Popularity Score ' +  str(popularity_score) + '/10'
+    text = clones_text + unique_clones_text + views_text + unique_views_text + stargazers_text + divider_string + popularity_score_text
 
     #print values
-    print(repo.name)
-    print(views_traffic.get("count"))
-    print(clones_traffic.get("count"))
-    print(size)
-    print()
+    print("repo name = ",repo.name)
+    print(text)
 
     #Add create and add bubble trace for each repo
     fig.add_trace(go.Scatter(
         x= [views_traffic.get("count")],
         y= [clones_traffic.get("count")],
         name= repo.name,
-        text= ['A<br>placeholder'],
+        text= [text],
         mode= 'markers',
         marker=dict(
-            size=size,
-            opacity=[0.5])
+            size=[views_traffic.get("count") + 1],
+            sizemode='area',
+            sizeref=sizeref,
+            sizemin=4)
         )
     )
 
 #Update the layout of the graph
 fig.update_layout(
-    title='Clones Traffic v. Count of Views Traffic',
+    title='Clones Traffic vs Views Traffic for ' +  str(user.login),
     xaxis=dict(
-        title='Count of Views Traffic',
+        title='Views Traffic',
         gridcolor='white',
     ),
     yaxis=dict(
-        title='Count of Clones Traffic',
+        title='Clones Traffic',
         gridcolor='white',
     ),
     paper_bgcolor='rgb(243, 243, 243)',
