@@ -2,7 +2,7 @@
 # Github Access
 I demonstrated access of the GitHub API in early commits by using JSON via the python "requests" library, as well as using the PyGitHub library.
 
-# Github Visualisation
+# Github Visualisation (Interactive)
 The [GitHubAPI.py](https://github.com/liamby12/Github-Access/blob/main/GitHubAPI.py) file retrieves information from the [GitHub’s REST API v3](https://developer.github.com/v3/) and provides a graphical representation in a localhost adress.
 This program returns a link to that localhost adress usually http://127.0.0.1:XXXXX/ . The graphical representation is of the repositories in the logged in users account. To log in you must replace the accessToken variable with a valid access token.
 You can generate an access token at [https://github.com/settings/tokens](https://github.com/settings/tokens). Without an access token the program will not be able to obtain the information it needs for visualisation.
